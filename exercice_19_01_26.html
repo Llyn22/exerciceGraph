@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercice 19_01_25</title>
+</head>
+
+<body>
+
+    <h1>Exercice 19_01_25</h1>
+
+    <h2>Graphique issu de Wikidata</h2>
+    <div>
+        <iframe
+            src="https://query.wikidata.org/embed.html#SELECT%20%3Ftitre_de_noblesseLabel%20%3Flieu_de_naissanceLabel%20%3Flieu_de_mortLabel%20WHERE%20%7B%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22%5BAUTO_LANGUAGE%5D%2Cmul%2Cen%22.%20%7D%0A%20%20%3Froi_de_France_et_de_Navarre%20wdt%3AP39%20wd%3AQ18384454.%0A%20%20OPTIONAL%20%7B%20%20%7D%0A%20%20OPTIONAL%20%7B%20%20%7D%0A%20%20OPTIONAL%20%7B%20%3Froi_de_France_et_de_Navarre%20wdt%3AP97%20%3Ftitre_de_noblesse.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Froi_de_France_et_de_Navarre%20wdt%3AP18%20%3Fimage.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Froi_de_France_et_de_Navarre%20wdt%3AP19%20%3Flieu_de_naissance.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Froi_de_France_et_de_Navarre%20wdt%3AP20%20%3Flieu_de_mort.%20%7D%0A%7D%0ALIMIT%201000"
+            style="width: 80vw; height: 50vh; border: none;"
+            referrerpolicy="origin"
+            sandbox="allow-scripts allow-same-origin allow-popups">
+        </iframe>
+    </div>
+
+    <h2>Graphique Pong (RawGraphs)</h2>
+    <div>
+        <img src="pong.png" alt="Graphique Pong réalisé avec RawGraphs">
+    </div>
+
+    <h2>Visualisation Voyant Tools</h2>
+    <div>
+        <!-- Exported from Voyant Tools (voyant-tools.org) -->
+        <iframe style="width: 476px; height: 417px;" src="https://voyant-tools.org/tool/Cirrus/?corpus=dce3275e77920a0b90410bdc6ebe9abd"></iframe>
+    </div>
+
+</body>
+</html>
