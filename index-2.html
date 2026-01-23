@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamAdvisor - Analyse et visualisation du streaming en France</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        nav {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            cursor: pointer;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #a0a0a0;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            width: 100%;
+        }
+
+        .nav-links a.active {
+            color: #fff;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .hero-section {
+            text-align: center;
+            padding: 80px 0;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            letter-spacing: -1px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .subtitle {
+            font-size: 1.4rem;
+            color: #a0a0a0;
+            font-weight: 300;
+            margin-bottom: 40px;
+        }
+
+        .page-header .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 0;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            cursor: pointer;
+            border: none;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 80px;
+            margin-bottom: 50px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 40px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(102, 126, 234, 0.4);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: #a0a0a0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #fff;
+            position: relative;
+        }
+
+        .features-section {
+            margin-top: 100px;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 50px;
+        }
+
+        .chart-section .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: left;
+            transition: all 0.4s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        .feature-description {
+            color: #a0a0a0;
+            line-height: 1.6;
+        }
+
+        .chart-section {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+        }
+
+        .creators-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .creator-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .creator-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .creator-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .creator-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateX(5px);
+        }
+
+        .creator-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .creator-name {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .rank-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .creator-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .creator-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .stat-item-label {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-item-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .growth-positive {
+            color: #4ade80;
+        }
+
+        .growth-neutral {
+            color: #a0a0a0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .visualization-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            min-height: 400px;
+            position: relative;
+        }
+
+        .chart-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .orbit-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .orbit-center {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 0 40px rgba(102, 126, 234, 0.5);
+            z-index: 2;
+        }
+
+        .orbit-path {
+            position: absolute;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .orbit-planet {
+            position: absolute;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            animation: orbit linear infinite;
+        }
+
+        .orbit-planet:hover {
+            transform: scale(1.2);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.6);
+            z-index: 10;
+        }
+
+        .orbit-planet.active {
+            transform: scale(1.3);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.8);
+            z-index: 11;
+        }
+
+        @keyframes orbit {
+            from {
+                transform: rotate(0deg) translateX(var(--orbit-radius)) rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg) translateX(var(--orbit-radius)) rotate(-360deg);
+            }
+        }
+
+        .planet-info {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 20, 30, 0.95);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 15px;
+            padding: 20px 30px;
+            min-width: 300px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .planet-info.visible {
+            opacity: 1;
+        }
+
+        .planet-info-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .planet-info-subs {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .planet-info-label {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            margin-top: 5px;
+        }
+
+        .growth-bar-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 20px 0;
+        }
+
+        .growth-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 15px;
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .growth-bar-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(5px);
+        }
+
+        .growth-bar-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .growth-bar-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .growth-bar-content {
+            flex: 1;
+        }
+
+        .growth-bar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .growth-bar-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .growth-bar-percentage {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #4ade80;
+        }
+
+        .growth-bar-visual {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .growth-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80 0%, #22c55e 100%);
+            border-radius: 10px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+        }
+
+        .growth-bar-item:hover .growth-bar-fill {
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.8);
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .bar-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .bar-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .bar-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+            transform: translateX(5px);
+        }
+
+        .bar-label {
+            min-width: 200px;
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            transition: color 0.3s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .bar-item:hover .bar-label {
+            color: #fff;
+        }
+
+        .bar-visual {
+            flex: 1;
+            height: 35px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            position: relative;
+            overflow: visible;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            position: relative;
+        }
+
+        .bar-item:hover .bar-fill {
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+            filter: brightness(1.2);
+        }
+
+        .bar-value {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .bar-item:hover .bar-value {
+            opacity: 1;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(20, 20, 30, 0.95);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            color: #fff;
+            font-size: 0.9rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            min-width: 200px;
+        }
+
+        .tooltip.active {
+            opacity: 1;
+        }
+
+        .tooltip-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 1rem;
+            color: #667eea;
+        }
+
+        .tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-row:last-child {
+            border-bottom: none;
+        }
+
+        .tooltip-label {
+            color: #a0a0a0;
+            font-size: 0.85rem;
+        }
+
+        .tooltip-value {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                gap: 15px;
+            }
+
+            .hero-section {
+                padding: 40px 0;
+            }
+
+            .stats-grid,
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .creator-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .visualization-container {
+                grid-template-columns: 1fr;
+            }
+
+            .bar-label {
+                min-width: 100px;
+                font-size: 0.8rem;
+            }
+
+            .bar-visual {
+                height: 30px;
+            }
+
+            .bar-value {
+                font-size: 0.75rem;
+                padding-right: 8px;
+            }
+
+            .chart-card {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .bar-label {
+                min-width: 80px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="logo" onclick="showPage('accueil')">StreamAdvisor</div>
+            <ul class="nav-links">
+                <li><a onclick="showPage('accueil')" class="active" data-page="accueil">Accueil</a></li>
+                <li><a onclick="showPage('classement')" data-page="classement">Classement</a></li>
+                <li><a onclick="showPage('tendances')" data-page="tendances">Tendances</a></li>
+                <li><a onclick="showPage('about')" data-page="about">À propos</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div id="accueil" class="page active">
+        <div class="container">
+            <div class="hero-section">
+                <h1 class="animate-in">StreamAdvisor</h1>
+                <p class="subtitle animate-in" style="animation-delay: 0.1s">Analyse et visualisation du streaming en France</p>
+                <button class="cta-button animate-in" style="animation-delay: 0.2s" onclick="showPage('classement')">Explorer les données</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card animate-in" style="animation-delay: 0.3s">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-label">Créateurs analysés</div>
+                    <div class="stat-value">10</div>
+                </div>
+                <div class="stat-card animate-in" style="animation-delay: 0.4s">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-label">Abonnés totaux</div>
+                    <div class="stat-value">108.7M</div>
+                </div>
+                <div class="stat-card animate-in" style="animation-delay: 0.5s">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-label">Croissance moyenne</div>
+                    <div class="stat-value">+13.2%</div>
+                </div>
+                <div class="stat-card animate-in" style="animation-delay: 0.6s">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-label">Leader actuel</div>
+                    <div class="stat-value" style="font-size: 1.8rem;">Tibo InShape</div>
+                </div>
+            </div>
+
+            <div class="features-section">
+                <h2 class="section-title animate-in" style="animation-delay: 0.7s">Fonctionnalités principales</h2>
+                <div class="features-grid">
+                    <div class="feature-card animate-in" style="animation-delay: 0.8s">
+                        <div class="feature-icon">📊</div>
+                        <h3 class="feature-title">Classements détaillés</h3>
+                        <p class="feature-description">Découvrez le classement complet des créateurs français les plus populaires avec leurs statistiques d'abonnés et leur évolution.</p>
+                    </div>
+                    <div class="feature-card animate-in" style="animation-delay: 0.9s">
+                        <div class="feature-icon">📈</div>
+                        <h3 class="feature-title">Analyse de croissance</h3>
+                        <p class="feature-description">Visualisez les tendances de croissance et identifiez les créateurs en pleine ascension sur la plateforme.</p>
+                    </div>
+                    <div class="feature-card animate-in" style="animation-delay: 1s">
+                        <div class="feature-icon">🎯</div>
+                        <h3 class="feature-title">Visualisations interactives</h3>
+                        <p class="feature-description">Explorez les données à travers des graphiques interactifs et des tableaux de bord dynamiques pour une analyse approfondie.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="classement" class="page">
+        <div class="container">
+            <div class="page-header animate-in">
+                <h1>Classement des créateurs</h1>
+                <p class="subtitle">Découvrez les créateurs français les plus populaires et leur évolution</p>
+            </div>
+
+            <div class="chart-section animate-in" style="animation-delay: 0.1s">
+                <h2 class="section-title">Classement des créateurs français</h2>
+                <div class="creators-list" id="creatorsList"></div>
+            </div>
+
+            <div class="chart-section animate-in" style="animation-delay: 0.2s">
+                <h2 class="section-title">Visualisations détaillées</h2>
+                <div class="visualization-container">
+                    <div class="chart-card">
+                        <h3 class="chart-title">Top 5 par abonnés actuels</h3>
+                        <div class="orbit-container" id="subsChart">
+                            <div class="orbit-center">👑</div>
+                            <div class="planet-info" id="planetInfo">
+                                <div class="planet-info-name" id="planetName"></div>
+                                <div class="planet-info-subs" id="planetSubs"></div>
+                                <div class="planet-info-label">abonnés</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3 class="chart-title">Top 5 par croissance (%)</h3>
+                        <div class="growth-bar-container" id="growthChart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tendances" class="page">
+        <div class="container">
+            <div class="page-header animate-in">
+                <h1>Tendances du streaming</h1>
+                <p class="subtitle">Analyses des pics d'audience et performances en direct</p>
+            </div>
+
+            <div class="stats-grid animate-in" style="animation-delay: 0.1s">
+                <div class="stat-card">
+                    <div class="stat-label">Record absolu</div>
+                    <div class="stat-value" id="maxPeak">1 373 815</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Événement record</div>
+                    <div class="stat-value" style="font-size: 1.5rem;">GP Explorer 3</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Moyenne top 20</div>
+                    <div class="stat-value" id="avgPeak">295 184</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Événements analysés</div>
+                    <div class="stat-value">20</div>
+                </div>
+            </div>
+
+            <div class="chart-section animate-in" style="animation-delay: 0.2s">
+                <h2 class="section-title">Plus grands événements streaming de l'année</h2>
+                <p class="subtitle" style="margin-bottom: 30px; text-align: left;">Découvrez les événements ayant généré les plus fortes audiences en direct</p>
+                <div class="visualization-container">
+                    <div class="chart-card full-width">
+                        <h3 class="chart-title">Top 20 des événements par audience</h3>
+                        <div class="bar-chart" id="peakViewersChart"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-section animate-in" style="animation-delay: 0.3s">
+                <h2 class="section-title">Analyses par créateur</h2>
+                <div class="visualization-container">
+                    <div class="chart-card">
+                        <h3 class="chart-title">Top 5 créateurs par audience maximale</h3>
+                        <div class="bar-chart" id="top5Chart"></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3 class="chart-title">Répartition des événements</h3>
+                        <div class="bar-chart" id="bottom5Chart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="about" class="page">
+        <div class="container">
+            <div class="page-header animate-in">
+                <h1>À propos</h1>
+                <p class="subtitle">En savoir plus sur StreamAdvisor</p>
+            </div>
+            <div class="chart-section animate-in" style="animation-delay: 0.1s">
+                <h2 class="section-title">Notre mission</h2>
+                <p style="color: #a0a0a0; line-height: 1.8; font-size: 1.1rem;">
+                    StreamAdvisor est une plateforme d'analyse dédiée à l'écosystème du streaming français. Notre objectif est de fournir des insights précis et des visualisations claires sur les performances des créateurs de contenu, permettant ainsi une meilleure compréhension des tendances du marché du streaming en France.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const creatorsData = [
+            {rang: 1, chaine: "Tibo InShape", abonnes_image: 20.0, abonnes_actuel: "26.9M", croissance_vol: "+6.90 M", croissance_pct: "+34.5%", croissance_num: 34.5},
+            {rang: 2, chaine: "Squeezie", abonnes_image: 18.9, abonnes_actuel: "20.0M", croissance_vol: "+1.10 M", croissance_pct: "+5.8%", croissance_num: 5.8},
+            {rang: 3, chaine: "Cyprien", abonnes_image: 14.5, abonnes_actuel: "Hors Top 50", croissance_vol: "—", croissance_pct: "—", croissance_num: 0},
+            {rang: 4, chaine: "Norman", abonnes_image: 11.5, abonnes_actuel: "Hors Top 50", croissance_vol: "—", croissance_pct: "—", croissance_num: 0},
+            {rang: 5, chaine: "Mayamystic", abonnes_image: 10.0, abonnes_actuel: "11.8M", croissance_vol: "+1.80 M", croissance_pct: "+18.0%", croissance_num: 18.0},
+            {rang: 6, chaine: "Michou", abonnes_image: 9.73, abonnes_actuel: "10.8M", croissance_vol: "+1.07 M", croissance_pct: "+11.0%", croissance_num: 11.0},
+            {rang: 7, chaine: "Lama Faché", abonnes_image: 9.68, abonnes_actuel: "9.83M", croissance_vol: "+0.15 M", croissance_pct: "+1.5%", croissance_num: 1.5},
+            {rang: 8, chaine: "Amixem", abonnes_image: 8.52, abonnes_actuel: "9.23M", croissance_vol: "+0.71 M", croissance_pct: "+8.3%", croissance_num: 8.3},
+            {rang: 9, chaine: "Tuvok12", abonnes_image: 8.4, abonnes_actuel: "9.97M", croissance_vol: "+1.57 M", croissance_pct: "+18.7%", croissance_num: 18.7},
+            {rang: 10, chaine: "Inoxtag", abonnes_image: 7.75, abonnes_actuel: "9.36M", croissance_vol: "+1.61 M", croissance_pct: "+20.8%", croissance_num: 20.8}
+        ];
+
+        const peakViewersData = [
+            {rang: 1, date: "05-oct", chaine: "Squeezie", evenement: "GP Explorer 3 (Jour 2)", audience: 1373815},
+            {rang: 2, date: "04-oct", chaine: "Squeezie", evenement: "GP Explorer 3 (Jour 1)", audience: 670527},
+            {rang: 3, date: "19-janv", chaine: "Aminematue", evenement: "Jour 3 : STREAM FOR HUMANITY", audience: 595594},
+            {rang: 4, date: "16-nov", chaine: "Aminematue", evenement: "STREAM FOR HUMANITY 2", audience: 362865},
+            {rang: 5, date: "08-mai", chaine: "nasdas_off", evenement: "ASSYA REVIENS DE DUBAI !", audience: 318228},
+            {rang: 6, date: "07-sept", chaine: "Domingo", evenement: "ZEVENT rush Final", audience: 269517},
+            {rang: 7, date: "02-mars", chaine: "Kameto", evenement: "LEC finale KC vs G2", audience: 233351},
+            {rang: 8, date: "02-avr", chaine: "nasdas_off", evenement: "CHIENNETTE TV : LIVE A LA VILLA", audience: 224875},
+            {rang: 9, date: "30-sept", chaine: "byilhann", evenement: "MONTPELLIER - PARIS À PIED : Jour 23", audience: 221337},
+            {rang: 10, date: "10-mai", chaine: "Squeezie", evenement: "Annonce GP Explorer", audience: 217866},
+            {rang: 11, date: "19-janv", chaine: "Squeezie", evenement: "Stream For Humanity", audience: 206919},
+            {rang: 12, date: "03-avr", chaine: "nasdas_off", evenement: "CHIENNETTE TV : ME REVOILA !", audience: 189142},
+            {rang: 13, date: "07-sept", chaine: "Zerator", evenement: "ZEVENT DERNIER JOUR", audience: 187462},
+            {rang: 14, date: "04-juin", chaine: "Squeezie", evenement: "GP Explorer : Reveal des livrées + artistes", audience: 175105},
+            {rang: 15, date: "24-mars", chaine: "Aminematue", evenement: "PRESENTATION DE LA KINGS LEAGUE FRANCE", audience: 167623},
+            {rang: 16, date: "19-janv", chaine: "Inoxtag", evenement: "STREAM FOR HUMANITY", audience: 157374},
+            {rang: 17, date: "07-sept", chaine: "Gotaga", evenement: "WORLDS FORTNITE", audience: 154895},
+            {rang: 18, date: "18-janv", chaine: "Kameto", evenement: "STREAM FOR HUMANITY | DAY 2", audience: 154835},
+            {rang: 19, date: "20-août", chaine: "Anyme", evenement: "LIVE IRL AFRIQUE", audience: 151854},
+            {rang: 20, date: "24-févr", chaine: "Kameto", evenement: "LEC Winter : KC vs G2 playoffs", audience: 151651}
+        ];
+
+        let currentPage = 'accueil';
+        let chartsRendered = {
+            classement: false,
+            tendances: false
+        };
+
+        function showPage(pageName) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.nav-links a').forEach(link => link.classList.remove('active'));
+            
+            document.getElementById(pageName).classList.add('active');
+            document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+            
+            currentPage = pageName;
+            
+            if (pageName === 'classement' && !chartsRendered.classement) {
+                renderCreatorsList();
+                renderSubsChart();
+                renderGrowthChart();
+                chartsRendered.classement = true;
+            }
+            
+            if (pageName === 'tendances' && !chartsRendered.tendances) {
+                renderPeakViewersChart();
+                renderTop5Chart();
+                renderBottom5Chart();
+                chartsRendered.tendances = true;
+            }
+            
+            window.scrollTo(0, 0);
+        }
+
+        function formatNumber(num) {
+            return num.toLocaleString('fr-FR');
+        }
+
+        function parseSubscribers(subStr) {
+            if (subStr === "Hors Top 50") return 0;
+            return parseFloat(subStr.replace('M', ''));
+        }
+
+        function renderCreatorsList() {
+            const container = document.getElementById('creatorsList');
+            container.innerHTML = '';
+            creatorsData.forEach((creator, index) => {
+                const item = document.createElement('div');
+                item.className = 'creator-item';
+                item.style.animationDelay = `${0.3 + index * 0.05}s`;
+                
+                const subsNum = parseSubscribers(creator.abonnes_actuel);
+                const progressPercent = subsNum > 0 ? (subsNum / 26.9) * 100 : 0;
+                
+                item.innerHTML = `
+                    <div class="creator-header">
+                        <div class="creator-name">
+                            <div class="rank-badge">${creator.rang}</div>
+                            <div class="creator-title">${creator.chaine}</div>
+                        </div>
+                    </div>
+                    <div class="creator-stats">
+                        <div class="stat-item">
+                            <span class="stat-item-label">Abonnés actuels</span>
+                            <span class="stat-item-value">${creator.abonnes_actuel}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-item-label">Croissance (vol.)</span>
+                            <span class="stat-item-value ${creator.croissance_vol !== '—' ? 'growth-positive' : 'growth-neutral'}">${creator.croissance_vol}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-item-label">Croissance (%)</span>
+                            <span class="stat-item-value ${creator.croissance_pct !== '—' ? 'growth-positive' : 'growth-neutral'}">${creator.croissance_pct}</span>
+                        </div>
+                    </div>
+                    ${subsNum > 0 ? `
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%" data-width="${progressPercent}%"></div>
+                    </div>
+                    ` : ''}
+                `;
+                container.appendChild(item);
+            });
+
+            setTimeout(() => {
+                document.querySelectorAll('.progress-fill').forEach(bar => {
+                    bar.style.width = bar.getAttribute('data-width');
+                });
+            }, 100);
+        }
+
+        function renderSubsChart() {
+            const container = document.getElementById('subsChart');
+            const planetInfo = document.getElementById('planetInfo');
+            const planetName = document.getElementById('planetName');
+            const planetSubs = document.getElementById('planetSubs');
+            
+            const topCreators = creatorsData
+                .filter(c => parseSubscribers(c.abonnes_actuel) > 0)
+                .sort((a, b) => parseSubscribers(b.abonnes_actuel) - parseSubscribers(a.abonnes_actuel))
+                .slice(0, 5);
+            
+            const maxSubs = parseSubscribers(topCreators[0].abonnes_actuel);
+            const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b'];
+            
+            topCreators.forEach((creator, index) => {
+                const subsNum = parseSubscribers(creator.abonnes_actuel);
+                const orbitRadius = 80 + (index * 40);
+                const planetSize = 40 + ((subsNum / maxSubs) * 40);
+                const animationDuration = 20 + (index * 5);
+                const animationDelay = index * 2;
+                
+                const orbitPath = document.createElement('div');
+                orbitPath.className = 'orbit-path';
+                orbitPath.style.width = `${orbitRadius * 2}px`;
+                orbitPath.style.height = `${orbitRadius * 2}px`;
+                container.appendChild(orbitPath);
+                
+                const planet = document.createElement('div');
+                planet.className = 'orbit-planet';
+                planet.style.width = `${planetSize}px`;
+                planet.style.height = `${planetSize}px`;
+                planet.style.setProperty('--orbit-radius', `${orbitRadius}px`);
+                planet.style.animationDuration = `${animationDuration}s`;
+                planet.style.animationDelay = `-${animationDelay}s`;
+                planet.style.background = `linear-gradient(135deg, ${colors[index]} 0%, ${colors[(index + 1) % colors.length]} 100%)`;
+                planet.style.fontSize = `${planetSize / 3}px`;
+                planet.textContent = `#${creator.rang}`;
+                
+                planet.addEventListener('click', () => {
+                    document.querySelectorAll('.orbit-planet').forEach(p => p.classList.remove('active'));
+                    planet.classList.add('active');
+                    
+                    planetName.textContent = creator.chaine;
+                    planetSubs.textContent = creator.abonnes_actuel;
+                    planetInfo.classList.add('visible');
+                    
+                    setTimeout(() => {
+                        planetInfo.classList.remove('visible');
+                        planet.classList.remove('active');
+                    }, 3000);
+                });
+                
+                container.appendChild(planet);
+            });
+        }
+
+        function renderGrowthChart() {
+            const container = document.getElementById('growthChart');
+            container.innerHTML = '';
+            const topGrowth = creatorsData
+                .filter(c => c.croissance_num > 0)
+                .sort((a, b) => b.croissance_num - a.croissance_num)
+                .slice(0, 5);
+            
+            const maxGrowth = topGrowth[0].croissance_num;
+            
+            topGrowth.forEach((creator, index) => {
+                const percent = (creator.croissance_num / maxGrowth) * 100;
+                
+                const item = document.createElement('div');
+                item.className = 'growth-bar-item';
+                item.innerHTML = `
+                    <div class="growth-bar-content">
+                        <div class="growth-bar-header">
+                            <span class="growth-bar-name">${creator.chaine}</span>
+                            <span class="growth-bar-percentage">${creator.croissance_pct}</span>
+                        </div>
+                        <div class="growth-bar-visual">
+                            <div class="growth-bar-fill" style="width: 0%" data-width="${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+                
+                item.addEventListener('mouseenter', (e) => showTooltip(e, creator, 'growth'));
+                item.addEventListener('mousemove', (e) => moveTooltip(e));
+                item.addEventListener('mouseleave', hideTooltip);
+                
+                container.appendChild(item);
+            });
+
+            setTimeout(() => {
+                document.querySelectorAll('.growth-bar-fill').forEach(bar => {
+                    bar.style.width = bar.getAttribute('data-width');
+                });
+            }, 500);
+        }
+
+        function renderPeakViewersChart() {
+            const container = document.getElementById('peakViewersChart');
+            container.innerHTML = '';
+            const maxViewers = peakViewersData[0].audience;
+            
+            peakViewersData.forEach((event) => {
+                const percent = (event.audience / maxViewers) * 100;
+                
+                const item = document.createElement('div');
+                item.className = 'bar-item';
+                item.innerHTML = `
+                    <div class="bar-label" title="${event.chaine} - ${event.evenement}">${event.chaine} - ${event.evenement}</div>
+                    <div class="bar-visual">
+                        <div class="bar-fill" style="width: 0%" data-width="${percent}%">
+                            <span class="bar-value">${formatNumber(event.audience)}</span>
+                        </div>
+                    </div>
+                `;
+                
+                item.addEventListener('mouseenter', (e) => showTooltip(e, event, 'peak'));
+                item.addEventListener('mousemove', (e) => moveTooltip(e));
+                item.addEventListener('mouseleave', hideTooltip);
+                
+                container.appendChild(item);
+            });
+
+            setTimeout(() => {
+                document.querySelectorAll('#peakViewersChart .bar-fill').forEach(bar => {
+                    bar.style.width = bar.getAttribute('data-width');
+                });
+            }, 500);
+        }
+
+        function renderTop5Chart() {
+            const container = document.getElementById('top5Chart');
+            container.innerHTML = '';
+            
+            const creatorMaxAudience = {};
+            peakViewersData.forEach(event => {
+                if (!creatorMaxAudience[event.chaine] || creatorMaxAudience[event.chaine].audience < event.audience) {
+                    creatorMaxAudience[event.chaine] = event;
+                }
+            });
+            
+            const top5Creators = Object.values(creatorMaxAudience)
+                .sort((a, b) => b.audience - a.audience)
+                .slice(0, 5);
+            
+            const maxViewers = top5Creators[0].audience;
+            
+            top5Creators.forEach((event) => {
+                const percent = (event.audience / maxViewers) * 100;
+                
+                const item = document.createElement('div');
+                item.className = 'bar-item';
+                item.innerHTML = `
+                    <div class="bar-label" title="${event.chaine}">${event.chaine}</div>
+                    <div class="bar-visual">
+                        <div class="bar-fill" style="width: 0%" data-width="${percent}%">
+                            <span class="bar-value">${formatNumber(event.audience)}</span>
+                        </div>
+                    </div>
+                `;
+                
+                item.addEventListener('mouseenter', (e) => showTooltip(e, event, 'peak'));
+                item.addEventListener('mousemove', (e) => moveTooltip(e));
+                item.addEventListener('mouseleave', hideTooltip);
+                
+                container.appendChild(item);
+            });
+
+            setTimeout(() => {
+                document.querySelectorAll('#top5Chart .bar-fill').forEach(bar => {
+                    bar.style.width = bar.getAttribute('data-width');
+                });
+            }, 700);
+        }
+
+        function renderBottom5Chart() {
+            const container = document.getElementById('bottom5Chart');
+            container.innerHTML = '';
+            
+            const eventCounts = {};
+            peakViewersData.forEach(event => {
+                eventCounts[event.chaine] = (eventCounts[event.chaine] || 0) + 1;
+            });
+            
+            const topCreatorsByEvents = Object.entries(eventCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            const maxEvents = topCreatorsByEvents[0][1];
+            
+            topCreatorsByEvents.forEach(([chaine, count]) => {
+                const percent = (count / maxEvents) * 100;
+                
+                const item = document.createElement('div');
+                item.className = 'bar-item';
+                item.innerHTML = `
+                    <div class="bar-label" title="${chaine}">${chaine}</div>
+                    <div class="bar-visual">
+                        <div class="bar-fill" style="width: 0%" data-width="${percent}%">
+                            <span class="bar-value">${count} événement${count > 1 ? 's' : ''}</span>
+                        </div>
+                    </div>
+                `;
+                
+                item.addEventListener('mouseenter', (e) => {
+                    const tip = createTooltip();
+                    tip.innerHTML = `
+                        <div class="tooltip-title">${chaine}</div>
+                        <div class="tooltip-row">
+                            <span class="tooltip-label">Nombre d'événements :</span>
+                            <span class="tooltip-value">${count}</span>
+                        </div>
+                    `;
+                    tip.classList.add('active');
+                    moveTooltip(e);
+                });
+                item.addEventListener('mousemove', (e) => moveTooltip(e));
+                item.addEventListener('mouseleave', hideTooltip);
+                
+                container.appendChild(item);
+            });
+
+            setTimeout(() => {
+                document.querySelectorAll('#bottom5Chart .bar-fill').forEach(bar => {
+                    bar.style.width = bar.getAttribute('data-width');
+                });
+            }, 700);
+        }
+
+        let tooltip = null;
+
+        function createTooltip() {
+            if (!tooltip) {
+                tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                document.body.appendChild(tooltip);
+            }
+            return tooltip;
+        }
+
+        function showTooltip(e, data, type) {
+            const tip = createTooltip();
+            let content = '';
+            
+            if (type === 'peak') {
+                content = `
+                    <div class="tooltip-title">${data.chaine}</div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">Rang :</span>
+                        <span class="tooltip-value">#${data.rang}</span>
+                    </div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">Date :</span>
+                        <span class="tooltip-value">${data.date}</span>
+                    </div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">Événement :</span>
+                        <span class="tooltip-value">${data.evenement}</span>
+                    </div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">Audience :</span>
+                        <span class="tooltip-value">${formatNumber(data.audience)}</span>
+                    </div>
+                `;
+            } else {
+                content = `
+                    <div class="tooltip-title">${data.chaine}</div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">Rang :</span>
+                        <span class="tooltip-value">#${data.rang}</span>
+                    </div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">Abonnés actuels :</span>
+                        <span class="tooltip-value">${data.abonnes_actuel}</span>
+                    </div>
+                `;
+                
+                if (type === 'growth' && data.croissance_vol !== '—') {
+                    content += `
+                        <div class="tooltip-row">
+                            <span class="tooltip-label">Croissance :</span>
+                            <span class="tooltip-value">${data.croissance_pct}</span>
+                        </div>
+                        <div class="tooltip-row">
+                            <span class="tooltip-label">Volume :</span>
+                            <span class="tooltip-value">${data.croissance_vol}</span>
+                        </div>
+                    `;
+                } else if (type === 'subs' && data.croissance_vol !== '—') {
+                    content += `
+                        <div class="tooltip-row">
+                            <span class="tooltip-label">Croissance :</span>
+                            <span class="tooltip-value">${data.croissance_vol} (${data.croissance_pct})</span>
+                        </div>
+                    `;
+                }
+            }
+            
+            tip.innerHTML = content;
+            tip.classList.add('active');
+            moveTooltip(e);
+        }
+
+        function moveTooltip(e) {
+            if (tooltip) {
+                const offset = 15;
+                const tooltipRect = tooltip.getBoundingClientRect();
+                let left = e.clientX + offset;
+                let top = e.clientY + offset;
+                
+                if (left + tooltipRect.width > window.innerWidth) {
+                    left = e.clientX - tooltipRect.width - offset;
+                }
+                
+                if (top + tooltipRect.height > window.innerHeight) {
+                    top = e.clientY - tooltipRect.height - offset;
+                }
+                
+                tooltip.style.left = left + 'px';
+                tooltip.style.top = top + 'px';
+            }
+        }
+
+        function hideTooltip() {
+            if (tooltip) {
+                tooltip.classList.remove('active');
+            }
+        }
+    </script>
